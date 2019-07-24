@@ -1,4 +1,4 @@
-module httputil
+module github.com/oxisto/go-httputil
 
 go 1.12
 
