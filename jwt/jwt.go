@@ -67,7 +67,7 @@ func NewHandler(Options Options) *JWTHandler {
 func (h JWTHandler) HandleWithNext(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	err := h.parseJWT(r)
 
-	if err != nil && next != nil {
+	if err == nil && next != nil {
 		next(w, r)
 	}
 }
