@@ -24,12 +24,21 @@ import (
 
 // LogWriter implements io.Writer and writes all incoming text out to the specified log level.
 type LogWriter struct {
+	Logger    *logrus.Logger
 	Level     logrus.Level
 	Component string
 }
 
 func (d LogWriter) Write(p []byte) (n int, err error) {
-	logrus.WithField("component", d.Component).Log(d.Level, strings.TrimRight(string(p), "\n"))
+	var entry *logrus.Entry
+
+	if d.Logger == nil {
+		entry = logrus.WithField("component", d.Component)
+	} else {
+		entry = d.Logger.WithField("component", d.Component)
+	}
+
+	entry.Log(d.Level, strings.TrimRight(string(p), "\n"))
 
 	return len(p), nil
 }
