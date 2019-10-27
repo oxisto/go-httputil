@@ -30,8 +30,13 @@ import (
 // TokenExtractorFunc defines a function which extracts a token out of an HTTP request
 type TokenExtractorFunc func(r *http.Request) (token string, err error)
 
+// ErrorHandlerFunc defines a function which is called if an error occured during the
+// extraction of a token
+type ErrorHandlerFunc func(err error, w http.ResponseWriter, r *http.Request, next http.HandlerFunc)
+
 type Options struct {
 	TokenExtractor TokenExtractorFunc
+	ErrorHandler   ErrorHandlerFunc
 	JWTKeySupplier jwt.Keyfunc
 	JWTClaims      jwt.Claims
 	RequireToken   bool
@@ -53,6 +58,7 @@ func init() {
 	DefaultOptions = Options{
 		RequireToken:   true,
 		TokenExtractor: ExtractTokenFromHeader,
+		ErrorHandler:   nil,
 		JWTClaims:      &jwt.StandardClaims{},
 	}
 }
@@ -68,6 +74,13 @@ func NewHandler(Options Options) *JWTHandler {
 func (h JWTHandler) HandleWithNext(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	err := h.parseJWT(r)
 
+	if err != nil && h.options.ErrorHandler != nil {
+		// forward error to error handler (if it exists)
+		h.options.ErrorHandler(err, w, r, next)
+		return
+	}
+
+	// continue as planned
 	if err == nil && next != nil {
 		next(w, r)
 	}
