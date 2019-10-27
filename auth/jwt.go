@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"golang.org/x/oauth2"
 )
 
 // TokenExtractorFunc defines a function which extracts a token out of an HTTP request
@@ -148,7 +149,9 @@ func ExtractFromFirstAvailable(extractors ...TokenExtractorFunc) TokenExtractorF
 }
 
 // IssueToken is a little helper that issues tokens for a specified key, subject and expiry time
-func IssueToken(key []byte, subject string, expiry time.Time) (token string, err error) {
+func IssueToken(key []byte, subject string, expiry time.Time) (token *oauth2.Token, err error) {
+	var accessToken string
+
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS512,
 		&jwt.StandardClaims{
 			ExpiresAt: expiry.Unix(),
@@ -156,6 +159,12 @@ func IssueToken(key []byte, subject string, expiry time.Time) (token string, err
 		},
 	)
 
-	token, err = claims.SignedString(key)
-	return
+	if accessToken, err = claims.SignedString(key); err != nil {
+		return nil, err
+	}
+
+	return &oauth2.Token{
+		AccessToken: accessToken,
+		Expiry:      expiry,
+	}, nil
 }

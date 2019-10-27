@@ -28,13 +28,13 @@ import (
 func TestHandleWithNext(t *testing.T) {
 	token, err := IssueToken([]byte("secret"), "me", time.Now().Add(time.Hour*24))
 
-	t.Logf(token)
+	t.Logf(token.AccessToken)
 
 	assert.Nil(t, err)
 
 	r := http.Request{
 		Header: http.Header{
-			"Authorization": []string{"Bearer " + token},
+			"Authorization": []string{"Bearer " + token.AccessToken},
 		},
 	}
 
