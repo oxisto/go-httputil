@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -48,9 +49,10 @@ func TestHandleWithNext(t *testing.T) {
 
 	handler := NewHandler(options)
 
-	handler.HandleWithNext(nil, &r, nil)
+	c := &gin.Context{Request: &r}
+	handler.AuthRequired(c)
 
-	parsed := r.Context().Value(DefaultAuthContext)
+	parsed := c.Value(ClaimsContext)
 
 	assert.NotNil(t, parsed)
 }

@@ -17,13 +17,13 @@ limitations under the License.
 package auth
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2"
 )
 
@@ -46,13 +46,11 @@ type JWTHandler struct {
 	options Options
 }
 
-type AuthContext int
-
 var ErrNoToken = errors.New("jwt: no token could be extracted and Options.RequireToken is true")
 
 var DefaultOptions Options
 
-const DefaultAuthContext AuthContext = iota
+const ClaimsContext string = "claims"
 
 func init() {
 	DefaultOptions = Options{
@@ -70,28 +68,21 @@ func NewHandler(Options Options) *JWTHandler {
 	return &handler
 }
 
-// HandleWithNext is a specific type of handler used for Negroni
-func (h JWTHandler) HandleWithNext(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	err := h.parseJWT(r)
+// AuthRequired is a middleware for gin-gonic
+func (h JWTHandler) AuthRequired(c *gin.Context) {
+	err := h.parseJWT(c)
 
-	if err != nil && h.options.ErrorHandler != nil {
-		// forward error to error handler (if it exists)
-		h.options.ErrorHandler(err, w, r, next)
-		return
-	}
-
-	// continue as planned
-	if err == nil && next != nil {
-		next(w, r)
+	if err == nil {
+		c.Next()
 	}
 }
 
-func (h JWTHandler) parseJWT(r *http.Request) (err error) {
+func (h JWTHandler) parseJWT(c *gin.Context) (err error) {
 	var token string
 	var parsed *jwt.Token
 
 	// extract token
-	token, err = h.options.TokenExtractor(r)
+	token, err = h.options.TokenExtractor(c.Request)
 
 	if err == nil && token == "" && h.options.RequireToken {
 		err = ErrNoToken
@@ -104,9 +95,7 @@ func (h JWTHandler) parseJWT(r *http.Request) (err error) {
 	}
 
 	// update context
-	request := r.WithContext(context.WithValue(r.Context(), DefaultAuthContext, parsed))
-
-	*r = *request
+	c.Set(ClaimsContext, parsed)
 
 	return
 }
