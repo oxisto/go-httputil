@@ -18,6 +18,7 @@ package auth
 
 import (
 	"net/http"
+	"sync"
 	"testing"
 	"time"
 
@@ -49,7 +50,7 @@ func TestHandleWithNext(t *testing.T) {
 
 	handler := NewHandler(options)
 
-	c := &gin.Context{Request: &r}
+	c := &gin.Context{Request: &r, KeysMutex: &sync.RWMutex{}}
 	handler.AuthRequired(c)
 
 	parsed := c.Value(ClaimsContext)
