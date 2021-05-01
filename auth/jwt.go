@@ -76,6 +76,7 @@ func (h JWTHandler) AuthRequired(c *gin.Context) {
 		c.Next()
 	} else {
 		c.Status(http.StatusForbidden)
+		c.Abort()
 	}
 }
 
@@ -98,7 +99,7 @@ func (h JWTHandler) parseJWT(c *gin.Context) (err error) {
 	}
 
 	// update context
-	c.Set(ClaimsContext, parsed)
+	c.Set(ClaimsContext, parsed.Claims)
 
 	return
 }
