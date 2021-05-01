@@ -74,6 +74,8 @@ func (h JWTHandler) AuthRequired(c *gin.Context) {
 
 	if err == nil {
 		c.Next()
+	} else {
+		c.Status(http.StatusForbidden)
 	}
 }
 
@@ -86,6 +88,7 @@ func (h JWTHandler) parseJWT(c *gin.Context) (err error) {
 
 	if err == nil && token == "" && h.options.RequireToken {
 		err = ErrNoToken
+		return
 	}
 
 	parsed, err = jwt.ParseWithClaims(token, h.options.JWTClaims, h.options.JWTKeySupplier)
