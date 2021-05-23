@@ -1,4 +1,4 @@
-module github.com/aybaze/go-httputil/v2
+module github.com/oxisto/go-httputil/v2
 
 go 1.12
 
